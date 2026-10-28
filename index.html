@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stick Story ยอดสด</title>
+<meta name="description" content="ยอดผู้ติดตาม YouTube และ Instagram แบบสด">
+<link rel="preload" href="img/thumbs_up.webp" as="image">
+<style>
+@font-face{font-family:"FC Home";src:url(fonts/fchome-regular.woff) format("woff");font-weight:400;font-display:swap}
+@font-face{font-family:"FC Home";src:url(fonts/fchome-black.woff) format("woff");font-weight:900;font-display:swap}
+:root{
+  --paper:#DAD3C3; --grid:rgba(60,45,30,.07); --card:#F3EEE2; --ink:#2A2522; --muted:#7A6E62;
+  --red:#B5261E; --red-deep:#A9271E; --shadow:#2A2522; --track:#CFC6B3; --green:#3E7D4F;
+  --vig:rgba(40,28,18,.35);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#2A2522; --grid:rgba(243,238,226,.05); --card:#3A332E; --ink:#F3EEE2; --muted:#B5AA9C;
+  --red:#D4473C; --shadow:#0F0C0A; --track:#4A423B; --green:#7DBA8A; --vig:rgba(0,0,0,.55);
+}}
+:root[data-theme="dark"]{
+  --paper:#2A2522; --grid:rgba(243,238,226,.05); --card:#3A332E; --ink:#F3EEE2; --muted:#B5AA9C;
+  --red:#D4473C; --shadow:#0F0C0A; --track:#4A423B; --green:#7DBA8A; --vig:rgba(0,0,0,.55);
+}
+*{box-sizing:border-box;margin:0}
+html,body{min-height:100%}
+body{
+  font-family:"FC Home",system-ui,sans-serif;color:var(--ink);background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:32px 32px;overflow-x:hidden;
+}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;
+  background:radial-gradient(ellipse at center,transparent 55%,var(--vig) 100%)}
+body::after{content:"";position:fixed;inset:-50%;pointer-events:none;z-index:51;opacity:.07;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation:grain 1s steps(4) infinite}
+@keyframes grain{0%{transform:translate(0,0)}25%{transform:translate(-3%,2%)}50%{transform:translate(2%,-3%)}75%{transform:translate(-2%,-1%)}}
+
+.wrap{max-width:1120px;margin:0 auto;padding:28px 16px 40px;position:relative;z-index:1}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+.live{display:inline-flex;align-items:center;gap:8px;background:var(--red);color:#F3EEE2;font-weight:900;
+  padding:6px 14px 4px;border:3px solid var(--shadow);box-shadow:4px 4px 0 var(--shadow);letter-spacing:.06em;font-size:18px}
+.live i{width:10px;height:10px;border-radius:50%;background:#F3EEE2;animation:blink 1.2s infinite}
+.live.demo{background:var(--muted)}
+@keyframes blink{50%{opacity:.25}}
+h1{font-weight:900;font-size:clamp(34px,6vw,60px);line-height:1;letter-spacing:-.01em}
+h1 em{font-style:normal;color:var(--red)}
+.tools{display:flex;gap:8px}
+.btn{font:inherit;font-weight:900;font-size:16px;color:var(--ink);background:var(--card);border:3px solid var(--shadow);
+  box-shadow:3px 3px 0 var(--shadow);padding:6px 12px 4px;cursor:pointer}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--shadow)}
+
+.grid{display:grid;grid-template-columns:1fr 360px;gap:26px;align-items:start}
+.cards{display:grid;gap:22px}
+.card{background:var(--card);border:4px solid var(--shadow);box-shadow:8px 8px 0 var(--shadow);padding:20px 22px 18px;position:relative;
+  transition:transform .15s}
+.card.bump{animation:bump .5s}
+@keyframes bump{20%{transform:scale(1.03) rotate(-.6deg)}50%{transform:scale(.99)}100%{transform:none}}
+.card .top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.label{font-weight:900;font-size:22px;letter-spacing:.02em}
+.label small{font-weight:400;color:var(--muted);font-size:17px;margin-left:6px}
+.delta{font-weight:900;font-size:18px;color:var(--green);min-height:1em}
+.delta.neg{color:var(--red)}
+.count{font-weight:900;font-size:clamp(54px,10vw,104px);line-height:1;display:flex;margin:10px 0 6px;font-variant-numeric:tabular-nums}
+.count.total{font-size:clamp(64px,13vw,140px);color:var(--red)}
+.digit{display:inline-block;height:1em;overflow:hidden;position:relative;width:.57em;text-align:center}
+.digit span{display:block;transition:transform .9s cubic-bezier(.2,1.4,.4,1)}
+.digit span b{display:block;height:1em;font-weight:900}
+.sep{width:.28em;text-align:center}
+.na{font-size:28px;color:var(--muted);font-weight:400;margin:22px 0 14px}
+.sub{color:var(--muted);font-size:17px}
+.bar{height:16px;border:3px solid var(--shadow);background:var(--track);margin:12px 0 6px;position:relative;overflow:hidden}
+.bar i{position:absolute;inset:0 auto 0 0;background:var(--red);width:0;transition:width 1s ease}
+.goal{display:flex;justify-content:space-between;font-size:16px;color:var(--muted)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+
+/* character */
+.stage{position:sticky;top:20px;height:600px}
+.hero{position:absolute;left:50%;bottom:30px;width:400px;transform:translateX(-50%);cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent}
+.hero .bob{animation:bob 2.6s ease-in-out infinite;transform-origin:50% 100%}
+.hero img{width:100%;display:block;transform-origin:50% 97%;filter:drop-shadow(0 0 0 transparent)}
+.hero img.pop{animation:pop .45s cubic-bezier(.3,1.6,.5,1)}
+.hero.flip img{scale:-1 1}
+.hero .shadow{position:absolute;left:50%;bottom:6px;width:46%;height:18px;transform:translateX(-50%);background:rgba(0,0,0,.2);border-radius:50%}
+@keyframes bob{50%{transform:translateY(-6px) scaleY(1.015)}}
+@keyframes pop{0%{transform:scale(.8,1.15)}55%{transform:scale(1.08,.93)}100%{transform:none}}
+.hero.jump .bob{animation:jump .6s cubic-bezier(.3,.7,.4,1)}
+@keyframes jump{0%{transform:scaleY(.85)}40%{transform:translateY(-60px) scaleY(1.06)}100%{transform:none}}
+.hero.shake .bob{animation:shake .5s}
+@keyframes shake{25%{transform:rotate(-3deg)}75%{transform:rotate(3deg)}}
+.hero.sleep .bob{animation:breathe 3.4s ease-in-out infinite}
+@keyframes breathe{50%{transform:scale(1.02,.98)}}
+
+.bubble{position:absolute;left:50%;top:120px;transform:translateX(-50%) scale(.6);opacity:0;background:var(--card);border:4px solid var(--shadow);
+  box-shadow:5px 5px 0 var(--shadow);padding:10px 16px 8px;font-weight:900;font-size:24px;white-space:nowrap;transition:transform .25s cubic-bezier(.3,1.6,.5,1),opacity .2s;z-index:3;max-width:340px;text-align:center;white-space:normal;width:max-content}
+.bubble::after{content:"";position:absolute;left:50%;bottom:-17px;width:22px;height:22px;background:var(--card);border-right:4px solid var(--shadow);border-bottom:4px solid var(--shadow);transform:translateX(-50%) rotate(45deg) skew(8deg,8deg)}
+.bubble.on{opacity:1;transform:translateX(-50%) scale(1)}
+.bubble em{font-style:normal;color:var(--red)}
+.zzz{position:absolute;right:40px;top:150px;font-weight:900;font-size:34px;color:var(--muted);opacity:0;pointer-events:none}
+.sleep ~ .zzz,.zzz.on{animation:zzz 2.4s infinite}
+@keyframes zzz{0%{opacity:0;transform:translate(0,10px) scale(.7)}30%{opacity:1}100%{opacity:0;transform:translate(30px,-50px) scale(1.2)}}
+
+.fx{position:fixed;pointer-events:none;z-index:40;font-weight:900}
+.plus{font-size:44px;color:var(--red);-webkit-text-stroke:2px var(--shadow);paint-order:stroke;animation:plus 1.4s ease-out forwards}
+@keyframes plus{0%{transform:translate(-50%,0) scale(.4);opacity:0}20%{transform:translate(-50%,-20px) scale(1.15);opacity:1}100%{transform:translate(-50%,-110px) scale(1);opacity:0}}
+.conf{width:12px;height:16px;border:2px solid var(--shadow)}
+.stamp{position:fixed;left:50%;top:40%;z-index:45;pointer-events:none;font-weight:900;font-size:clamp(40px,9vw,96px);color:var(--red);
+  border:8px solid var(--red);padding:6px 26px 0;background:rgba(243,238,226,.9);transform:translate(-50%,-50%) rotate(-8deg);animation:stamp 3.2s forwards;white-space:nowrap}
+@keyframes stamp{0%{transform:translate(-50%,-50%) rotate(-8deg) scale(3);opacity:0}12%{transform:translate(-50%,-50%) rotate(-8deg) scale(.95);opacity:1}18%{transform:translate(-50%,-50%) rotate(-8deg) scale(1)}85%{opacity:1}100%{opacity:0}}
+
+.log{margin-top:26px}
+.log h2{font-weight:900;font-size:24px;margin-bottom:10px}
+.log ul{list-style:none;padding:0;display:grid;gap:8px}
+.log li{background:var(--card);border:3px solid var(--shadow);box-shadow:4px 4px 0 var(--shadow);padding:8px 14px 6px;display:flex;justify-content:space-between;gap:10px;font-size:18px;animation:slide .4s}
+.log li b{color:var(--green)} .log li b.neg{color:var(--red)}
+.log li span{color:var(--muted);white-space:nowrap}
+.log .empty{color:var(--muted);font-size:18px}
+@keyframes slide{from{transform:translateX(-14px);opacity:0}}
+footer{margin-top:30px;color:var(--muted);font-size:16px;line-height:1.5}
+.err{color:var(--red)}
+
+@media (max-width:860px){
+  .grid{grid-template-columns:1fr}
+  .stage{position:relative;top:0;height:370px;order:-1}
+  .hero{width:270px}
+  .bubble{top:10px}
+  .bubble{font-size:20px}
+}
+@media (max-width:520px){ .two{grid-template-columns:1fr} .card{box-shadow:6px 6px 0 var(--shadow)} }
+
+/* OBS / overlay mode: ?obs=1 */
+.obs body,body.obs{background:transparent}
+body.obs::before,body.obs::after,body.obs header,body.obs .log,body.obs footer{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <span class="live" id="live"><i></i>LIVE</span>
+      <h1 style="margin-top:12px">ยอดติดตาม<em>สด</em></h1>
+      <div class="sub" style="font-size:20px;margin-top:6px">Stick Story · YouTube @stickstoryth · IG @stickstory.time</div>
+    </div>
+    <div class="tools">
+      <button class="btn" id="sound" aria-pressed="false">🔇 เสียง</button>
+      <button class="btn" id="theme" title="สลับโหมดสว่าง/มืด">สว่าง/มืด</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <div>
+      <div class="cards">
+        <section class="card" id="c-total">
+          <div class="top"><div class="label">รวมทุกช่องทาง</div><div class="delta" id="d-total"></div></div>
+          <div class="count total" id="n-total"></div>
+          <div class="sub" id="s-total">กำลังโหลด…</div>
+        </section>
+        <div class="two">
+          <section class="card" id="c-yt">
+            <div class="top"><div class="label">YouTube <small id="name-yt"></small></div><div class="delta" id="d-yt"></div></div>
+            <div class="count" id="n-yt"></div>
+            <div class="bar"><i id="b-yt"></i></div>
+            <div class="goal"><span id="g-yt"></span><span id="r-yt"></span></div>
+          </section>
+          <section class="card" id="c-ig">
+            <div class="top"><div class="label">Instagram <small id="name-ig"></small></div><div class="delta" id="d-ig"></div></div>
+            <div class="count" id="n-ig"></div>
+            <div class="bar"><i id="b-ig"></i></div>
+            <div class="goal"><span id="g-ig"></span><span id="r-ig"></span></div>
+          </section>
+        </div>
+      </div>
+
+      <section class="log">
+        <h2>ความเคลื่อนไหวล่าสุด</h2>
+        <ul id="log"><li class="empty" style="all:unset;color:var(--muted);font-size:18px">ยังไม่มีคนกดติดตามใหม่ตั้งแต่เปิดหน้านี้ รอแป๊บนึงนะ</li></ul>
+      </section>
+    </div>
+
+    <aside class="stage" id="stage">
+      <div class="bubble" id="bubble"></div>
+      <div class="hero" id="hero" title="จิ้มเลย!">
+        <div class="shadow"></div>
+        <div class="bob"><img id="pose" src="img/thumbs_up.webp" alt="ตัวละครประจำช่อง"></div>
+      </div>
+      <div class="zzz" id="zzz">Z z z</div>
+    </aside>
+  </div>
+
+  <footer id="foot">
+    ยอด YouTube อัปเดตทุก 1 นาที (เกิน 1,000 คน YouTube จะแสดงยอดแบบปัดเศษ) · ยอด Instagram อัปเดตโดยเจ้าของช่อง
+  </footer>
+</div>
+
+<script src="config.js"></script>
+<script>
+(() => {
+const Q = new URLSearchParams(location.search);
+const POLL = 20000;
+if (Q.has('obs')) document.body.classList.add('obs');
+
+/* ---------- theme / sound ---------- */
+const themeBtn = document.getElementById('theme');
+try { const t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch(e){}
+themeBtn.onclick = () => {
+  const dark = getComputedStyle(document.documentElement).getPropertyValue('--paper').trim().toUpperCase() === '#2A2522';
+  const t = dark ? 'light' : 'dark'; document.documentElement.dataset.theme = t;
+  try { localStorage.setItem('theme', t); } catch(e){}
+};
+let soundOn = false, ac = null;
+const soundBtn = document.getElementById('sound');
+soundBtn.onclick = () => {
+  soundOn = !soundOn; soundBtn.textContent = soundOn ? '🔊 เสียง' : '🔇 เสียง'; soundBtn.setAttribute('aria-pressed', soundOn);
+  if (soundOn) { ac = ac || new (window.AudioContext||window.webkitAudioContext)(); blip([660,990]); }
+};
+function blip(freqs, dur=.12){
+  if (!soundOn || !ac) return;
+  freqs.forEach((f,i) => { const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime + i*dur;
+    o.type='triangle'; o.frequency.value=f; g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(.25,t+.01); g.gain.exponentialRampToValueAtTime(.0001,t+dur*1.6);
+    o.connect(g).connect(ac.destination); o.start(t); o.stop(t+dur*2); });
+}
+
+/* ---------- rolling counters ---------- */
+const fmt = n => n.toLocaleString('en-US');
+function setCount(el, n){
+  if (n == null) { el.innerHTML = '<div class="na">ซ่อนยอด / ยังไม่เชื่อม</div>'; return; }
+  const s = fmt(n);
+  if (el.dataset.len != s.length) {              // rebuild only when digit count changes
+    el.innerHTML = [...s].map(ch => ch === ',' ? '<span class="sep">,</span>'
+      : '<span class="digit"><span>' + [...'0123456789'].map(d=>'<b>'+d+'</b>').join('') + '</span></span>').join('');
+    el.dataset.len = s.length;
+    el.offsetHeight;
+  }
+  const cols = el.querySelectorAll('.digit > span'); let i = 0;
+  [...s].forEach(ch => { if (ch !== ',') cols[i++].style.transform = `translateY(-${ch}em)`; });
+}
+function nextGoal(n){
+  if (n < 100) return 100;
+  const p = Math.pow(10, Math.floor(Math.log10(n)));
+  const steps = [1,2,5,10]; for (const s of steps) if (s*p > n) return s*p;
+}
+function milestoneCrossed(a, b){ // a->b crossed a round number?
+  if (a == null || b == null || b <= a) return null;
+  for (let m = nextGoal(a); m <= b; m = nextGoal(m)) return m;
+  return null;
+}
+function setGoal(k, n){
+  const bar = document.getElementById('b-'+k), g = document.getElementById('g-'+k), r = document.getElementById('r-'+k);
+  if (n == null) { bar.style.width = 0; g.textContent = ''; r.textContent = ''; return; }
+  const goal = nextGoal(n), prev = goal/ (String(goal)[0]==='1' ? 2 : String(goal)[0]==='2' ? 2 : 2.5);
+  const lo = n < 100 ? 0 : prev;
+  bar.style.width = Math.max(2, Math.min(100, (n-lo)/(goal-lo)*100)) + '%';
+  g.textContent = 'เป้าหมาย ' + fmt(goal); r.textContent = 'อีก ' + fmt(goal-n);
+}
+
+/* ---------- character ---------- */
+const POSES = ['thumbs_up','hero_pose','cheer','jump_surprise','run_happy','think','sleep_sit','confused','panic','point','shh','dizzy'];
+POSES.forEach(p => { const i = new Image(); i.src = 'img/'+p+'.webp'; });
+const hero = document.getElementById('hero'), img = document.getElementById('pose'), bubble = document.getElementById('bubble'), zzz = document.getElementById('zzz');
+let busyUntil = 0, idleIdx = 0, lastChange = Date.now(), bubbleT;
+function setPose(p, {flip=false, cls=''}={}){
+  if (!img.src.endsWith(p+'.webp')) img.src = 'img/'+p+'.webp';
+  img.classList.remove('pop'); img.offsetWidth; img.classList.add('pop');
+  hero.className = 'hero' + (flip?' flip':'') + (cls?' '+cls:'');
+  zzz.classList.toggle('on', p === 'sleep_sit');
+}
+function say(html, ms=2600){
+  bubble.innerHTML = html; bubble.classList.add('on');
+  clearTimeout(bubbleT); bubbleT = setTimeout(() => bubble.classList.remove('on'), ms);
+}
+function act(steps){ // [[pose, ms, opts], ...]
+  let t = 0; steps.forEach(([p, ms, o]) => { setTimeout(() => setPose(p, o), t); t += ms; });
+  busyUntil = Date.now() + t;
+  setTimeout(idle, t + 30);
+}
+const IDLE = [['thumbs_up'],['point',{flip:true}],['hero_pose']];
+function idle(){
+  if (Date.now() < busyUntil) return;
+  const quiet = Date.now() - lastChange;
+  if (quiet > 5*60e3) { if (!img.src.endsWith('sleep_sit.webp')) { setPose('sleep_sit',{cls:'sleep'}); say('ง่วงจัง… มีใครกดติดตามมาปลุกหน่อย', 4000); } return; }
+  if (quiet > 2*60e3) { if (!img.src.endsWith('think.webp')) { setPose('think'); say('รอเพื่อนใหม่อยู่นะ…', 3000); } return; }
+  const [p,o] = IDLE[idleIdx++ % IDLE.length]; setPose(p, o);
+}
+setInterval(idle, 8000);
+
+const GAIN_LINES = n => [
+  `ขอบคุณที่กดติดตาม! <em>+${n}</em>`, `เย้! เพื่อนใหม่มาแล้ว <em>+${n}</em>`, `ยินดีต้อนรับเข้าแก๊ง! <em>+${n}</em>`, `สุดยอด! <em>+${fmt(n)}</em> คน`];
+const SRC = {yt:'YouTube', ig:'Instagram'};
+function onGain(k, n){
+  const wasAsleep = img.src.endsWith('sleep_sit.webp');
+  lastChange = Date.now();
+  act([[wasAsleep?'panic':'jump_surprise', 650, {cls:'jump'}], ['cheer', 1900, {cls:'jump'}], ['thumbs_up', 1400]]);
+  const lines = GAIN_LINES(n); say((wasAsleep ? 'หา! ตื่นแล้ว ๆ — ' : '') + lines[Math.floor(Math.random()*lines.length)] + `<br><small style="font-weight:400;font-size:17px">${SRC[k]}</small>`, 3600);
+  blip([523,659,784]);
+}
+function onLoss(k, n){
+  lastChange = Date.now();
+  act([['confused', 2400, {cls:'shake'}]]);
+  say(`อ้าว… ${SRC[k]} ลดไป ${fmt(n)} ไม่เป็นไร ๆ`, 2600);
+  blip([392,330]);
+}
+function onMilestone(m){
+  act([['jump_surprise', 600, {cls:'jump'}], ['hero_pose', 3600], ['cheer', 1800, {cls:'jump'}]]);
+  setTimeout(() => say(`ครบ <em>${fmt(m)}</em> แล้ว!! ขอบคุณทุกคน`, 4200), 600);
+  const s = document.createElement('div'); s.className = 'stamp'; s.textContent = 'ครบ ' + fmt(m) + '!'; document.body.appendChild(s);
+  setTimeout(() => s.remove(), 3300);
+  confetti(innerWidth/2, innerHeight*.4, 90); blip([523,659,784,1047], .14);
+}
+let clicks = [];
+hero.onclick = () => {
+  clicks = clicks.filter(t => Date.now() - t < 2500); clicks.push(Date.now());
+  if (clicks.length >= 6) { clicks = []; act([['dizzy', 2600, {cls:'shake'}]]); say('พอแล้ว ๆ หัวหมุน~'); return; }
+  const r = [['run_happy','ฮี่ ๆ จั๊กจี้!'],['shh','ชู่ว… กดติดตามเงียบ ๆ ก็ได้นะ'],['point','กดติดตามตรงนั้นเลย!'],['cheer','เย้!']][Math.floor(Math.random()*4)];
+  act([[r[0], 1600, {cls: r[0]==='cheer'?'jump':'', flip: r[0]==='point'}]]); say(r[1], 1800);
+  blip([880]);
+};
+
+/* ---------- FX ---------- */
+const COLORS = ['#B5261E','#F3EEE2','#2A2522','#D9A441','#7A6E62'];
+function confetti(x, y, n=24){
+  for (let i=0;i<n;i++){
+    const d = document.createElement('div'); d.className = 'fx conf';
+    d.style.background = COLORS[i%COLORS.length]; d.style.left = x+'px'; d.style.top = y+'px';
+    document.body.appendChild(d);
+    const a = Math.random()*Math.PI*2, v = 120 + Math.random()*260;
+    d.animate([{transform:'translate(0,0) rotate(0)'},{transform:`translate(${Math.cos(a)*v}px,${Math.sin(a)*v - 80}px) rotate(${Math.random()*720}deg)`, offset:.55},
+      {transform:`translate(${Math.cos(a)*v*1.2}px,${Math.sin(a)*v + 260}px) rotate(${Math.random()*900}deg)`, opacity:0}], {duration:1600+Math.random()*700, easing:'cubic-bezier(.2,.7,.4,1)'}).onfinish = () => d.remove();
+  }
+}
+function floatText(el, txt){
+  const r = el.getBoundingClientRect(); const d = document.createElement('div');
+  d.className = 'fx plus'; d.textContent = txt; d.style.left = (r.left + r.width/2)+'px'; d.style.top = (r.top + 30)+'px';
+  document.body.appendChild(d); setTimeout(() => d.remove(), 1500);
+  confetti(r.left + r.width/2, r.top + 60, 22);
+}
+
+/* ---------- data ---------- */
+const state = {yt:null, ig:null}, start = {yt:null, ig:null};
+const logEl = document.getElementById('log');
+function addLog(k, d){
+  const empty = logEl.querySelector('.empty'); if (empty) empty.remove();
+  const li = document.createElement('li');
+  const t = new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  li.innerHTML = `<div>${SRC[k]} <b class="${d<0?'neg':''}">${d>0?'+':''}${fmt(d)}</b> ${d>0?'คนกดติดตามใหม่':'คน'}</div><span>${t}</span>`;
+  logEl.prepend(li); while (logEl.children.length > 8) logEl.lastChild.remove();
+}
+function setDelta(id, d){
+  const el = document.getElementById(id); el.className = 'delta' + (d<0?' neg':'');
+  el.textContent = d ? (d>0?'+':'') + fmt(d) + (id==='d-total' ? ' ตั้งแต่เปิดหน้านี้' : '') : '';
+  el.title = 'เปลี่ยนแปลงตั้งแต่เปิดหน้านี้';
+}
+function render(data){
+  const yt = data.youtube || {}, ig = data.instagram || {};
+  const ny = yt.error ? null : yt.subs ?? null, ni = ig.error ? null : ig.followers ?? null;
+  document.getElementById('name-yt').textContent = yt.name || (yt.error ? '' : '');
+  document.getElementById('name-ig').textContent = ig.name ? '@'+ig.name : '';
+  const events = [];
+  for (const [k, n] of [['yt',ny],['ig',ni]]) {
+    const prev = state[k];
+    if (prev != null && n != null && n !== prev) {
+      const d = n - prev; addLog(k, d);
+      const m = milestoneCrossed(prev, n);
+      events.push(m ? () => onMilestone(m) : d > 0 ? () => onGain(k, d) : () => onLoss(k, -d));
+      if (d > 0) { const c = document.getElementById('c-'+k); c.classList.remove('bump'); c.offsetWidth; c.classList.add('bump'); floatText(c, '+'+fmt(d)); }
+    }
+    if (start[k] == null && n != null) start[k] = n;
+    state[k] = n;
+    setCount(document.getElementById('n-'+k), n); setGoal(k, n);
+    setDelta('d-'+k, n != null && start[k] != null ? n - start[k] : 0);
+  }
+  const tot = (ny||0) + (ni||0);
+  setCount(document.getElementById('n-total'), ny==null && ni==null ? null : tot);
+  setDelta('d-total', (ny!=null&&start.yt!=null?ny-start.yt:0) + (ni!=null&&start.ig!=null?ni-start.ig:0));
+  const notes = [];
+  if (yt.error) notes.push('<span class="err">YouTube: '+esc(yt.error)+'</span>');
+  if (ig.error) notes.push('<span class="err">Instagram: '+esc(ig.error)+'</span>');
+  if (yt.stale || ig.stale) notes.push('กำลังเชื่อมต่อใหม่…');
+  document.getElementById('s-total').innerHTML = notes.length ? notes.join(' · ') :
+    'อัปเดตล่าสุด ' + new Date(data.ts || Date.now()).toLocaleTimeString('th-TH');
+  events.forEach((f,i) => setTimeout(f, i*2600));
+}
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* demo mode: when ?demo=1, or when there is no backend yet (e.g. previewing the files) */
+let demo = Q.has('demo') || location.protocol === 'file:';
+const fake = {yt:12340, ig:8765};
+function demoTick(){
+  const r = Math.random();
+  if (r < .55) fake.ig += 1 + (Math.random()<.2 ? Math.floor(Math.random()*4) : 0);
+  else if (r < .75) fake.yt += 10;            // YouTube moves in rounded steps
+  else if (r < .82) fake.ig -= 1;
+  else if (r < .86) fake.ig = nextGoal(fake.ig); // show a milestone
+  render({youtube:{name:'Stick Story', subs:fake.yt, rounded:true}, instagram:{name:'stickstory.time', followers:fake.ig}, ts:Date.now()});
+  setTimeout(demoTick, 5000 + Math.random()*5000);
+}
+function startDemo(){
+  demo = true; const l = document.getElementById('live'); l.classList.add('demo'); l.innerHTML = '<i></i>โหมดตัวอย่าง';
+  render({youtube:{name:'Stick Story', subs:fake.yt}, instagram:{name:'stickstory.time', followers:fake.ig}, ts:Date.now()});
+  setTimeout(demoTick, 3500);
+}
+/* GitHub Pages version: YouTube is read straight from the YouTube API (key in config.js),
+   Instagram comes from data.json, which the owner edits on admin.html */
+const CFG = window.CONFIG || {};
+let ytCache = null, ytAt = 0;
+async function getYT(){
+  if (ytCache && Date.now() - ytAt < (CFG.YT_EVERY_SECONDS || 60) * 1000) return ytCache;
+  if (!CFG.YT_API_KEY) return {error: 'ยังไม่ได้ใส่ YouTube API key ใน config.js'};
+  try {
+    const r = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=statistics,snippet&id=${CFG.YT_CHANNEL_ID}&key=${CFG.YT_API_KEY}`);
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error?.message || 'YouTube ' + r.status);
+    const ch = d.items?.[0]; if (!ch) throw new Error('ไม่เจอช่อง YouTube');
+    const st = ch.statistics;
+    ytCache = {name: ch.snippet.title, subs: st.hiddenSubscriberCount ? null : Number(st.subscriberCount)}; ytAt = Date.now();
+    return ytCache;
+  } catch (e) { return ytCache ? {...ytCache, stale: true} : {error: e.message}; }
+}
+let igCache = null;
+async function getIG(){
+  try {
+    const r = await fetch('data.json?t=' + Date.now(), {cache: 'no-store'});
+    if (!r.ok) throw new Error('ไม่เจอ data.json');
+    const d = await r.json();
+    if (d.instagram_followers == null) throw new Error('ยังไม่ได้ใส่ยอด IG');
+    igCache = {name: CFG.IG_NAME || '', followers: Number(d.instagram_followers)};
+    return igCache;
+  } catch (e) { return igCache ? {...igCache, stale: true} : {error: e.message}; }
+}
+async function poll(){
+  if (!document.hidden) {                       // don't use quota while the tab is in the background
+    const [youtube, instagram] = await Promise.all([getYT(), getIG()]);
+    render({youtube, instagram, ts: Date.now()});
+  }
+  if (!demo) setTimeout(poll, POLL);
+}
+demo ? startDemo() : poll();
+document.addEventListener('visibilitychange', () => { if (!document.hidden) lastChange = Math.max(lastChange, Date.now() - 60e3); });
+})();
+</script>
+</body>
+</html>
