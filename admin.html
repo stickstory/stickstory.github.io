@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>แก้ยอด IG</title>
+<style>
+@font-face{font-family:"FC Home";src:url(fonts/fchome-regular.woff) format("woff");font-weight:400;font-display:swap}
+@font-face{font-family:"FC Home";src:url(fonts/fchome-black.woff) format("woff");font-weight:900;font-display:swap}
+:root{--paper:#DAD3C3;--card:#F3EEE2;--ink:#2A2522;--muted:#7A6E62;--red:#B5261E;--green:#3E7D4F;--grid:rgba(60,45,30,.07)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--paper:#2A2522;--card:#3A332E;--ink:#F3EEE2;--muted:#B5AA9C;--red:#D4473C;--green:#7DBA8A;--grid:rgba(243,238,226,.05)}}
+:root[data-theme="dark"]{--paper:#2A2522;--card:#3A332E;--ink:#F3EEE2;--muted:#B5AA9C;--red:#D4473C;--green:#7DBA8A;--grid:rgba(243,238,226,.05)}
+*{box-sizing:border-box;margin:0}
+body{font-family:"FC Home",system-ui,sans-serif;color:var(--ink);background:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:32px 32px;min-height:100vh}
+.wrap{max-width:460px;margin:0 auto;padding:28px 16px 40px}
+h1{font-weight:900;font-size:40px;line-height:1.05}
+h1 em{font-style:normal;color:var(--red)}
+.sub{color:var(--muted);font-size:18px;margin:6px 0 22px}
+.card{background:var(--card);border:4px solid #2A2522;box-shadow:7px 7px 0 #2A2522;padding:20px}
+label{display:block;font-weight:900;font-size:19px;margin-bottom:6px}
+input{font:inherit;font-size:20px;width:100%;padding:10px 12px 8px;border:3px solid #2A2522;background:#fff;color:#2A2522}
+input.big{font-size:52px;font-weight:900;text-align:center;padding:6px}
+.row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin:12px 0}
+button{font:inherit;font-weight:900;font-size:20px;border:3px solid #2A2522;box-shadow:3px 3px 0 #2A2522;background:var(--card);color:var(--ink);padding:10px 6px 7px;cursor:pointer}
+button:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #2A2522}
+button.main{width:100%;background:var(--red);color:#F3EEE2;font-size:24px;margin-top:6px}
+button.link{all:unset;color:var(--red);cursor:pointer;text-decoration:underline;font-size:16px}
+.chk{display:flex;align-items:center;gap:8px;font-size:17px;color:var(--muted);margin:10px 0 14px}
+.chk input{width:auto}
+.msg{min-height:1.4em;margin-top:14px;font-size:19px;font-weight:900}
+.msg.ok{color:var(--green)} .msg.err{color:var(--red)}
+.hint{color:var(--muted);font-size:16px;line-height:1.5;margin-top:16px}
+.field{margin-top:12px}
+a{color:var(--red)}
+#step2{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>แก้ยอด <em>Instagram</em></h1>
+  <p class="sub">@stickstory.time · หน้านี้สำหรับเจ้าของช่องเท่านั้น</p>
+
+  <div class="card" id="step1">
+    <label for="tok">GitHub token</label>
+    <input id="tok" type="password" autocomplete="off" placeholder="github_pat_…">
+    <div class="field"><label for="repo">ที่เก็บเว็บ (ชื่อผู้ใช้/ชื่อ repo)</label>
+    <input id="repo" placeholder="stickstory/stickstory.github.io"></div>
+    <div class="chk"><input id="remember" type="checkbox" checked><label for="remember" style="all:unset">จำไว้ในเครื่องนี้</label></div>
+    <button class="main" id="login">เข้าสู่ระบบ</button>
+    <div class="msg" id="msg1"></div>
+  </div>
+
+  <div class="card" id="step2">
+    <label for="n">ยอดผู้ติดตาม IG ตอนนี้</label>
+    <input id="n" class="big" type="number" inputmode="numeric" min="0" step="1">
+    <div class="row">
+      <button data-d="-1">−1</button><button data-d="1">+1</button><button data-d="5">+5</button><button data-d="10">+10</button>
+    </div>
+    <button class="main" id="save">บันทึก</button>
+    <div class="msg" id="msg2"></div>
+    <p class="hint" id="last"></p>
+    <p class="hint"><button class="link" id="logout">ออกจากระบบในเครื่องนี้</button></p>
+  </div>
+
+  <p class="hint">กดบันทึกแล้ว GitHub จะใช้เวลาประมาณ 1–2 นาทีในการอัปเดตเว็บ จากนั้นหน้าแฟน ๆ จะเห็นยอดใหม่ และตัวละครจะออกท่าดีใจให้<br>
+  <a href="./">← กลับหน้ายอดติดตาม</a></p>
+</div>
+<script>
+(() => {
+const $ = id => document.getElementById(id);
+const store = {get(k){try{return localStorage.getItem(k)||''}catch(e){return ''}}, set(k,v){try{localStorage.setItem(k,v)}catch(e){}}, del(k){try{localStorage.removeItem(k)}catch(e){}}};
+
+// guess owner/repo from the address: https://OWNER.github.io/REPO/admin.html
+(function guess(){
+  const m = location.hostname.match(/^([^.]+)\.github\.io$/i);
+  if (m) { const seg = location.pathname.split('/').filter(Boolean)[0]; $('repo').value = m[1] + '/' + (seg && !seg.endsWith('.html') ? seg : m[1] + '.github.io'); }
+})();
+if (store.get('gh_tok')) $('tok').value = store.get('gh_tok');
+if (store.get('gh_repo')) $('repo').value = store.get('gh_repo');
+
+let tok = '', repo = '', sha = null;
+async function gh(method, body){
+  const r = await fetch(`https://api.github.com/repos/${repo}/contents/data.json`, {
+    method, cache: 'no-store',
+    headers: {'Authorization': 'Bearer ' + tok, 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28'},
+    body: body ? JSON.stringify(body) : undefined});
+  const d = await r.json().catch(() => ({}));
+  if (r.status === 401) throw new Error('token ไม่ถูกต้อง หรือหมดอายุแล้ว');
+  if (r.status === 403) throw new Error('token นี้ไม่มีสิทธิ์แก้ไฟล์ (ต้องเปิดสิทธิ์ Contents: Read and write)');
+  if (r.status === 404) throw new Error('ไม่เจอ repo หรือไม่เจอไฟล์ data.json');
+  if (r.status === 409) throw new Error('ไฟล์ถูกแก้จากที่อื่นพร้อมกัน ลองกดบันทึกอีกครั้ง');
+  if (!r.ok) throw new Error(d.message || ('ผิดพลาด ' + r.status));
+  return d;
+}
+const b64 = s => btoa(unescape(encodeURIComponent(s)));
+const unb64 = s => decodeURIComponent(escape(atob(s.replace(/\n/g, ''))));
+function showLast(t){ $('last').textContent = t ? 'บันทึกล่าสุด ' + new Date(t).toLocaleString('th-TH') : 'ยังไม่เคยบันทึกยอด'; }
+
+async function load(){
+  const d = await gh('GET'); sha = d.sha;
+  let data = {}; try { data = JSON.parse(unb64(d.content)); } catch(e){}
+  $('n').value = data.instagram_followers ?? ''; showLast(data.updated);
+}
+
+$('login').onclick = async () => {
+  tok = $('tok').value.trim(); repo = $('repo').value.trim().replace(/^https?:\/\/github\.com\//, '').replace(/\/$/, '');
+  $('msg1').className = 'msg'; $('msg1').textContent = 'กำลังตรวจสอบ…';
+  try {
+    await load();
+    if ($('remember').checked) { store.set('gh_tok', tok); store.set('gh_repo', repo); } else { store.del('gh_tok'); }
+    $('step1').style.display = 'none'; $('step2').style.display = 'block'; $('n').focus();
+  } catch(e) { $('msg1').className = 'msg err'; $('msg1').textContent = e.message; }
+};
+$('logout').onclick = () => { store.del('gh_tok'); store.del('gh_repo'); location.reload(); };
+
+document.querySelectorAll('[data-d]').forEach(b => b.onclick = () => {
+  $('n').value = Math.max(0, (parseInt($('n').value, 10) || 0) + Number(b.dataset.d));
+});
+
+$('save').onclick = async () => {
+  const n = parseInt($('n').value, 10);
+  if (!Number.isInteger(n) || n < 0) { $('msg2').className = 'msg err'; $('msg2').textContent = 'ใส่ตัวเลขให้ถูกก่อนนะ'; return; }
+  $('msg2').className = 'msg'; $('msg2').textContent = 'กำลังบันทึก…';
+  const now = new Date().toISOString();
+  try {
+    const text = JSON.stringify({instagram_followers: n, updated: now}, null, 2) + '\n';
+    let d;
+    try { d = await gh('PUT', {message: 'IG followers = ' + n, content: b64(text), sha}); }
+    catch (e) { if (!/พร้อมกัน/.test(e.message)) throw e; await load(); $('n').value = n; d = await gh('PUT', {message: 'IG followers = ' + n, content: b64(text), sha}); }
+    sha = d.content.sha;
+    $('msg2').className = 'msg ok'; $('msg2').textContent = 'บันทึกแล้ว! ยอด IG = ' + n.toLocaleString('en-US');
+    showLast(now);
+  } catch(e) { $('msg2').className = 'msg err'; $('msg2').textContent = e.message; }
+};
+$('n').addEventListener('keydown', e => { if (e.key === 'Enter') $('save').click(); });
+$('tok').addEventListener('keydown', e => { if (e.key === 'Enter') $('login').click(); });
+})();
+</script>
+</body>
+</html>
